@@ -1,0 +1,10 @@
+Flask
+pandas
+nltk
+numpy
+ffmpeg-python
+requests
+whisper
+yt-dlp
+google-api-python-client
+scikit-learn
