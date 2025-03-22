@@ -28,17 +28,6 @@ from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import linear_kernel
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-# Gensim packages
-from gensim import corpora
-from gensim import models
-from gensim.parsing import strip_tags, strip_numeric, strip_multiple_whitespaces
-from gensim.parsing import stem_text, strip_punctuation, remove_stopwords, preprocess_string
-
-
-import warnings
-warnings.filterwarnings("ignore")
-
-
 app = Flask(__name__)
 
 @app.route('/process', methods=['POST'])
@@ -167,52 +156,8 @@ def process_query():
 
     df['doc_sim'] = pd.Series(document_scores)
 
-    transform_to_lower = lambda s: s.lower()
-
-    remove_single_char = lambda s: re.sub(r'\s+\w{1}\s+', '', s)
-
-    # Adding Lemmatization
-    def lemmatize_text(text):
-        lemmatizer = WordNetLemmatizer()
-        words = nltk.word_tokenize(text)
-        lemmatized_words = [lemmatizer.lemmatize(word) for word in words]
-        return ' '.join(lemmatized_words)
-
-    CLEAN_FILTERS = [strip_tags,
-                    strip_numeric,
-                    strip_punctuation,
-                    strip_multiple_whitespaces,
-                    transform_to_lower,
-                    remove_stopwords,
-                    remove_single_char,
-                    lemmatize_text]
-
-    def cleaning_pipe(document):
-        processed_text = preprocess_string(document, CLEAN_FILTERS)
-        return processed_text
-
-    list_text_clean = []
-
-    for i in list_text:
-        list_text_clean.append(cleaning_pipe(i))
-
-    list_text_clean.append(search_terms.split(" "))
-
-    dictionary = corpora.Dictionary()
-    BoW_corpus = [dictionary.doc2bow(doc, allow_update=True) for doc in list_text_clean]
-
-    tfidf = models.TfidfModel(BoW_corpus, smartirs='ntc')
-    word_vector = tfidf[BoW_corpus]
-
-    # Calculate similarity
-    cosine_similarities = linear_kernel(doc_vectors[-1], doc_vectors).flatten()
-    document_scores = [item.item() for item in cosine_similarities[0:-1]]
-
-    df['doc_sim_gensim'] = pd.Series(document_scores)
-
-    result = df.to_dict(orient='records')  # Convert DataFrame to list of dictionaries
+    result = df.to_dict(orient='records') 
     return jsonify(result)
-    # return query
 
 
 def download_youtube_video(url, index_num):
